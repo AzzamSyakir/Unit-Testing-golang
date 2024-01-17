@@ -12,7 +12,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func SetupRoutes(db *sql.DB) *mux.Router {
+func Router(db *sql.DB) *mux.Router {
 	// Initialize repositories
 	userRepository := repositories.NewUserRepository(db)
 
@@ -45,7 +45,7 @@ func SetupRoutes(db *sql.DB) *mux.Router {
 
 func RunServer() {
 	db := config.InitDB()
-	router := SetupRoutes(db)
+	router := Router(db)
 
 	// Mulai server HTTP dengan router yang telah dikonfigurasi
 	http.Handle("/", router)
