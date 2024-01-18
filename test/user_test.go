@@ -19,7 +19,8 @@ import (
 
 func TestRegister(t *testing.T) {
 	// initialize env
-	if err := godotenv.Load(); err != nil {
+	envPath := "/var/www/html/testing-golang/.env" //absolute path to env file
+	if err := godotenv.Load(envPath); err != nil {
 		log.Fatal("Error loading .env file:", err)
 	}
 
