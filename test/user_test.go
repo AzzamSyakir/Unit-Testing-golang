@@ -67,9 +67,9 @@ func TestRegister(t *testing.T) {
 }
 func TestLogin(t *testing.T) {
 	// initialize env
-	envPath := "/var/www/html/testing-golang/.env" //absolute path to env file
+	envPath := "/var/www/html/testing-golang/.env" // absolute path to env file
 	if err := godotenv.Load(envPath); err != nil {
-		log.Fatal("Error loading .env file:", err)
+		t.Fatalf("Error loading .env file: %v", err)
 	}
 
 	// Buat mock untuk http.Request
@@ -84,33 +84,56 @@ func TestLogin(t *testing.T) {
 	userRepository := repositories.NewUserRepository(db)
 	userService := service.NewUserService(*userRepository)
 	userController := controller.NewUserController(*userService)
-
 	// Panggil fungsi controller
 	userController.LoginUser(recorder, request)
-
 	response := recorder.Result() // Dapatkan respons
 
 	// Periksa status code
-	assert.Equal(t, http.StatusCreated, response.StatusCode)
+	if response.StatusCode != http.StatusOK {
+		var result map[string]interface{}
+		err := json.NewDecoder(response.Body).Decode(&result)
+		if err != nil {
+			t.Fatalf("Error decoding response body: %v", err)
+		}
 
-	// Periksa body respons
-	body, err := ioutil.ReadAll(response.Body)
-	assert.Nil(t, err)
-
-	// Ambil data dari body respons
-	var data map[string]interface{}
-	if err := json.Unmarshal(body, &data); err != nil {
-		t.Errorf("Error unmarshaling body: %v", err)
+		errorMessage, ok := result["message"].(string)
+		if !ok {
+			t.Fatalf("Expected status code 200, got %d", response.StatusCode)
+		} else {
+			t.Fatalf("Expected status code 200, got %d. Error message: %s", response.StatusCode, errorMessage)
+		}
 		return
 	}
 
-	// Simpan token login ke variabel publik
-	loginToken = data["data"].(map[string]interface{})["token"].(string)
+	// Continue with other checks as needed
 
-	// Periksa message
-	expectedMessage := "Success" // Sesuaikan dengan pesan yang diinginkan
-	actualMessage := data["message"].(string)
-	assert.Equal(t, expectedMessage, actualMessage)
+	// Periksa body respons
+	var result map[string]interface{}
+	err := json.NewDecoder(response.Body).Decode(&result)
+	if err != nil {
+		t.Fatalf("Error decoding response body: %v", err)
+	}
+
+	// Periksa token dan message
+	token, ok := result["data"].(map[string]interface{})["token"].(string)
+	if !ok {
+		t.Fatalf("Token tidak ditemukan dalam respons")
+		return
+	}
+
+	message, ok := result["message"].(string)
+	if !ok {
+		t.Fatalf("Pesan tidak ditemukan dalam respons")
+		return
+	}
+
+	if message != "Login berhasil" {
+		t.Fatalf("Pesan tidak sesuai: %s", message)
+		return
+	}
+
+	// Simpan token login ke variabel global (jika diperlukan)
+	loginToken = token
 }
 
 // func FetchUser(testing.T) {
