@@ -17,6 +17,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var loginToken string
+
 func TestRegister(t *testing.T) {
 	// initialize env
 	envPath := "/var/www/html/testing-golang/.env" //absolute path to env file
@@ -32,7 +34,6 @@ func TestRegister(t *testing.T) {
 	// Buat mock untuk http.ResponseWriter
 	recorder := httptest.NewRecorder()
 
-	// Buat mock db
 	db := config.InitDBTest() // Menginisialisasi database test
 	userRepository := repositories.NewUserRepository(db)
 	userService := service.NewUserService(*userRepository)
@@ -64,3 +65,98 @@ func TestRegister(t *testing.T) {
 
 	t.Log("Tes berhasil")
 }
+func TestLogin(t *testing.T) {
+	// initialize env
+	envPath := "/var/www/html/testing-golang/.env" //absolute path to env file
+	if err := godotenv.Load(envPath); err != nil {
+		log.Fatal("Error loading .env file:", err)
+	}
+
+	// Buat mock untuk http.Request
+	request := httptest.NewRequest(http.MethodPost, "/api/users/login", bytes.NewBufferString(`{"email": "asa@gmail.com", "password": "rahasia"}`))
+	request.Header.Set("Content-Type", "application/json")
+	request.Header.Set("Accept", "application/json")
+
+	// Buat mock untuk http.ResponseWriter
+	recorder := httptest.NewRecorder()
+
+	db := config.InitDBTest() // Menginisialisasi database test
+	userRepository := repositories.NewUserRepository(db)
+	userService := service.NewUserService(*userRepository)
+	userController := controller.NewUserController(*userService)
+
+	// Panggil fungsi controller
+	userController.LoginUser(recorder, request)
+
+	response := recorder.Result() // Dapatkan respons
+
+	// Periksa status code
+	assert.Equal(t, http.StatusCreated, response.StatusCode)
+
+	// Periksa body respons
+	body, err := ioutil.ReadAll(response.Body)
+	assert.Nil(t, err)
+
+	// Ambil data dari body respons
+	var data map[string]interface{}
+	if err := json.Unmarshal(body, &data); err != nil {
+		t.Errorf("Error unmarshaling body: %v", err)
+		return
+	}
+
+	// Simpan token login ke variabel publik
+	loginToken = data["data"].(map[string]interface{})["token"].(string)
+
+	// Periksa message
+	expectedMessage := "Success" // Sesuaikan dengan pesan yang diinginkan
+	actualMessage := data["message"].(string)
+	assert.Equal(t, expectedMessage, actualMessage)
+}
+
+// func FetchUser(testing.T) {
+// 	// initialize env
+// 	envPath := "/var/www/html/testing-golang/.env" //absolute path to env file
+// 	if err := godotenv.Load(envPath); err != nil {
+// 		log.Fatal("Error loading .env file:", err)
+// 	}
+
+// 	// Buat mock untuk http.Request
+// 	request := httptest.NewRequest(http.MethodGet, "/api/users")
+// 	request.Header.Set("Content-Type", "application/json")
+// 	request.Header.Set("Accept", "application/json")
+
+// 	// Buat mock untuk http.ResponseWriter
+// 	recorder := httptest.NewRecorder()
+
+// 	// Buat mock db
+// 	db := config.InitDBTest() // Menginisialisasi database test
+// 	userRepository := repositories.NewUserRepository(db)
+// 	userService := service.NewUserService(*userRepository)
+// 	userController := controller.NewUserController(*userService)
+
+// 	// Panggil fungsi controller
+// 	userController.FetchUserController(recorder, request)
+
+// 	response := recorder.Result() // Dapatkan respons
+
+// 	// Periksa status code
+// 	assert.Equal(t, http.StatusCreated, response.StatusCode)
+
+// 	// Periksa body respons
+// 	body, err := ioutil.ReadAll(response.Body)
+// 	assert.Nil(t, err)
+
+// 	// Ambil data dari body respons
+// 	var data map[string]interface{}
+// 	if err := json.Unmarshal(body, &data); err != nil {
+// 		t.Errorf("Error unmarshaling body: %v", err)
+// 		return
+// 	}
+
+// 	// Periksa message
+// 	expectedMessage := "Success" // Sesuaikan dengan pesan yang diinginkan
+// 	actualMessage := data["message"].(string)
+// 	assert.Equal(t, expectedMessage, actualMessage)
+
+// 	t.Log("Tes berhasil")
+// }
