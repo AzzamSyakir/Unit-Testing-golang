@@ -136,50 +136,52 @@ func TestLogin(t *testing.T) {
 	loginToken = token
 }
 
-// func FetchUser(testing.T) {
-// 	// initialize env
-// 	envPath := "/var/www/html/testing-golang/.env" //absolute path to env file
-// 	if err := godotenv.Load(envPath); err != nil {
-// 		log.Fatal("Error loading .env file:", err)
-// 	}
+func TestFetchUser(t *testing.T) {
+	// initialize env
+	envPath := "/var/www/html/testing-golang/.env" // absolute path to env file
+	if err := godotenv.Load(envPath); err != nil {
+		log.Fatal("Error loading .env file:", err)
+	}
 
-// 	// Buat mock untuk http.Request
-// 	request := httptest.NewRequest(http.MethodGet, "/api/users")
-// 	request.Header.Set("Content-Type", "application/json")
-// 	request.Header.Set("Accept", "application/json")
+	// Buat mock untuk http.Request
+	request := httptest.NewRequest(http.MethodGet, "/api/users", nil)
 
-// 	// Buat mock untuk http.ResponseWriter
-// 	recorder := httptest.NewRecorder()
+	// Set authorization header with the token
+	request.Header.Set("Authorization", "Bearer "+loginToken)
+	request.Header.Set("Content-Type", "application/json")
+	request.Header.Set("Accept", "application/json")
 
-// 	// Buat mock db
-// 	db := config.InitDBTest() // Menginisialisasi database test
-// 	userRepository := repositories.NewUserRepository(db)
-// 	userService := service.NewUserService(*userRepository)
-// 	userController := controller.NewUserController(*userService)
+	// Buat mock untuk http.ResponseWriter
+	recorder := httptest.NewRecorder()
 
-// 	// Panggil fungsi controller
-// 	userController.FetchUserController(recorder, request)
+	// Buat mock db
+	db := config.InitDBTest() // Menginisialisasi database test
+	userRepository := repositories.NewUserRepository(db)
+	userService := service.NewUserService(*userRepository)
+	userController := controller.NewUserController(*userService)
 
-// 	response := recorder.Result() // Dapatkan respons
+	// Panggil fungsi controller
+	userController.FetchUserController(recorder, request)
 
-// 	// Periksa status code
-// 	assert.Equal(t, http.StatusCreated, response.StatusCode)
+	response := recorder.Result() // Dapatkan respons
 
-// 	// Periksa body respons
-// 	body, err := ioutil.ReadAll(response.Body)
-// 	assert.Nil(t, err)
+	// Periksa status code
+	assert.Equal(t, http.StatusOK, response.StatusCode)
 
-// 	// Ambil data dari body respons
-// 	var data map[string]interface{}
-// 	if err := json.Unmarshal(body, &data); err != nil {
-// 		t.Errorf("Error unmarshaling body: %v", err)
-// 		return
-// 	}
+	// Periksa body respons
+	body, err := ioutil.ReadAll(response.Body)
+	assert.Nil(t, err)
 
-// 	// Periksa message
-// 	expectedMessage := "Success" // Sesuaikan dengan pesan yang diinginkan
-// 	actualMessage := data["message"].(string)
-// 	assert.Equal(t, expectedMessage, actualMessage)
+	// Ambil data dari body respons
+	var result map[string]interface{}
+	err = json.Unmarshal(body, &result)
+	assert.Nil(t, err)
 
-// 	t.Log("Tes berhasil")
-// }
+	// Periksa message
+	expectedMessage := "Success" // Sesuaikan dengan pesan yang diinginkan
+	actualMessage, ok := result["message"].(string)
+	assert.True(t, ok)
+	assert.Equal(t, expectedMessage, actualMessage)
+
+	t.Log("Tes berhasil")
+}

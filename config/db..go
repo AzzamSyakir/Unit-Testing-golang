@@ -73,8 +73,8 @@ func InitDBTest() *sql.DB {
 	log.Info().Msg("Terhubung ke database!")
 
 	// Panggil fungsi migrate untuk inisialisasi migrasi database
-	migration.UserMigrate(db)  // User
-	migration.TokenMigrate(db) // User
+	migration.UserMigrate(db)  // call user migration
+	migration.TokenMigrate(db) // call token migration
 	DB = db
 
 	return db
