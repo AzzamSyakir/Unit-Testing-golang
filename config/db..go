@@ -36,11 +36,16 @@ func InitDB() *sql.DB {
 	if err != nil {
 		log.Fatal().Err(err).Msg("Gagal melakukan ping ke database")
 	}
-
-	log.Info().Msg("Terhubung ke database!")
-
 	// Panggil fungsi migrate untuk inisialisasi migrasi database
-	migration.UserMigrate(db) // User -> Order
+	if err := migration.UserMigrate(db); err != nil {
+		log.Error().Err(err).Msg("Gagal melakukan migrasi user")
+	}
+
+	if err := migration.TokenMigrate(db); err != nil {
+		log.Error().Err(err).Msg("Gagal melakukan migrasi token")
+	}
+
+	log.Info().Msg("Terhubung ke database!, migration Success")
 
 	DB = db
 
@@ -70,12 +75,14 @@ func InitDBTest() *sql.DB {
 		log.Fatal().Err(err).Msg("Gagal melakukan ping ke database")
 	}
 
-	log.Info().Msg("Terhubung ke database!")
-
 	// Panggil fungsi migrate untuk inisialisasi migrasi database
-	migration.UserMigrate(db)  // call user migration
-	migration.TokenMigrate(db) // call token migration
-	DB = db
+	if err := migration.UserMigrate(db); err != nil {
+		log.Error().Err(err).Msg("Gagal melakukan migrasi user")
+	}
+
+	if err := migration.TokenMigrate(db); err != nil {
+		log.Error().Err(err).Msg("Gagal melakukan migrasi token")
+	}
 
 	return db
 }

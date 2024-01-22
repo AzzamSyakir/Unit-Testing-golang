@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -23,7 +22,7 @@ func TestRegister(t *testing.T) {
 	// initialize env
 	envPath := "/var/www/html/testing-golang/.env" //absolute path to env file
 	if err := godotenv.Load(envPath); err != nil {
-		log.Fatal("Error loading .env file:", err)
+		t.Fatalf("Error loading .env file: %v", err)
 	}
 
 	// Buat mock untuk http.Request
@@ -45,16 +44,36 @@ func TestRegister(t *testing.T) {
 	response := recorder.Result() // Dapatkan respons
 
 	// Periksa status code
-	assert.Equal(t, http.StatusCreated, response.StatusCode)
+	if response.StatusCode != http.StatusCreated {
+		var data map[string]interface{}
+		err := json.NewDecoder(response.Body).Decode(&data)
+		if err != nil {
+			t.Fatalf("Error decoding response body: %v", err)
+		}
+
+		errorMessage, ok := data["message"].(string)
+		if !ok {
+			t.Fatalf("Expected status code 201, got %d", response.StatusCode)
+		} else {
+			t.Fatalf("Expected status code 201, got %d. Error message: %s", response.StatusCode, errorMessage)
+		}
+		t.FailNow() // Menghentikan eksekusi tes saat ada kesalahan
+		return
+	}
 
 	// Periksa body respons
 	body, err := ioutil.ReadAll(response.Body)
-	assert.Nil(t, err)
+	if err != nil {
+		t.Fatalf("Error membaca body: %v", err)
+		t.FailNow() // Menghentikan eksekusi tes saat ada kesalahan
+		return
+	}
 
 	// Ambil data dari body respons
 	var data map[string]interface{}
 	if err := json.Unmarshal(body, &data); err != nil {
-		t.Errorf("Error unmarshaling body: %v", err)
+		t.Fatalf("Error unmarshaling body: %v", err)
+		t.FailNow() // Menghentikan eksekusi tes saat ada kesalahan
 		return
 	}
 
@@ -65,6 +84,7 @@ func TestRegister(t *testing.T) {
 
 	t.Log("Tes berhasil")
 }
+
 func TestLogin(t *testing.T) {
 	// initialize env
 	envPath := "/var/www/html/testing-golang/.env" // absolute path to env file
@@ -134,13 +154,13 @@ func TestLogin(t *testing.T) {
 
 	// Simpan token login ke variabel global (jika diperlukan)
 	loginToken = token
+	t.Log("tes berhasil")
 }
-
 func TestFetchUser(t *testing.T) {
 	// initialize env
 	envPath := "/var/www/html/testing-golang/.env" // absolute path to env file
 	if err := godotenv.Load(envPath); err != nil {
-		log.Fatal("Error loading .env file:", err)
+		t.Fatalf("Error loading .env file: %v", err)
 	}
 
 	// Buat mock untuk http.Request
@@ -166,21 +186,42 @@ func TestFetchUser(t *testing.T) {
 	response := recorder.Result() // Dapatkan respons
 
 	// Periksa status code
-	assert.Equal(t, http.StatusOK, response.StatusCode)
+	if response.StatusCode != http.StatusOK {
+		var result map[string]interface{}
+		err := json.NewDecoder(response.Body).Decode(&result)
+		if err != nil {
+			t.Fatalf("Error decoding response body: %v", err)
+		}
+
+		errorMessage, ok := result["message"].(string)
+		if !ok {
+			t.Fatalf("Expected status code 200, got %d", response.StatusCode)
+		} else {
+			t.Fatalf("Expected status code 200, got %d. Error message: %s", response.StatusCode, errorMessage)
+		}
+		t.FailNow() // Menghentikan eksekusi tes saat ada kesalahan
+		return
+	}
+
+	// Continue with other checks as needed
 
 	// Periksa body respons
-	body, err := ioutil.ReadAll(response.Body)
-	assert.Nil(t, err)
-
-	// Ambil data dari body respons
 	var result map[string]interface{}
-	err = json.Unmarshal(body, &result)
-	assert.Nil(t, err)
+	err := json.NewDecoder(response.Body).Decode(&result)
+	if err != nil {
+		t.Fatalf("Error decoding response body: %v", err)
+		t.FailNow() // Menghentikan eksekusi tes saat ada kesalahan
+		return
+	}
 
 	// Periksa message
 	expectedMessage := "Success" // Sesuaikan dengan pesan yang diinginkan
 	actualMessage, ok := result["message"].(string)
-	assert.True(t, ok)
+	if !ok {
+		t.Fatalf("Pesan tidak ditemukan dalam respons")
+		t.FailNow() // Menghentikan eksekusi tes saat ada kesalahan
+		return
+	}
 	assert.Equal(t, expectedMessage, actualMessage)
 
 	t.Log("Tes berhasil")
