@@ -3,7 +3,10 @@ package main
 import (
 	"fmt"
 	"log"
-	routes "testing-golang/application/router"
+	"os"
+	"testing-golang/application/router"
+	"testing-golang/config"
+	"testing-golang/migrate"
 
 	"github.com/joho/godotenv"
 )
@@ -14,6 +17,25 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
-	fmt.Println("server start on port 9000")
-	routes.RunServer()
+	// Cek argumen command line
+	if len(os.Args) > 1 {
+		// Jika argumen adalah "migrate", jalankan migrasi
+		if os.Args[1] == "migrate" {
+			// Initialize database
+			db, err := config.InitDB()
+			if err != nil {
+				log.Fatal("Error connecting to database:", err)
+			}
+			err = migrate.MigrateDB(db)
+			if err != nil {
+				log.Fatal("Error running migrations:", err)
+			}
+			fmt.Println("Migrations successfully!")
+			return
+		}
+	}
+
+	// Jika tidak ada argumen, jalankan server
+	fmt.Println("Server started on port 9000")
+	router.RunServer()
 }

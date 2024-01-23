@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
-	"testing-golang/application/migration"
 
 	_ "github.com/go-sql-driver/mysql" // Import driver MySQL
 	"github.com/rs/zerolog/log"
@@ -13,7 +12,7 @@ import (
 var DB *sql.DB
 
 // InitDB digunakan untuk menghubungkan ke database.
-func InitDB() *sql.DB {
+func InitDB() (*sql.DB, error) {
 
 	//baca env nya
 	sqlInfo := fmt.Sprintf(
@@ -36,20 +35,12 @@ func InitDB() *sql.DB {
 	if err != nil {
 		log.Fatal().Err(err).Msg("Gagal melakukan ping ke database")
 	}
-	// Panggil fungsi migrate untuk inisialisasi migrasi database
-	if err := migration.UserMigrate(db); err != nil {
-		log.Error().Err(err).Msg("Gagal melakukan migrasi user")
-	}
 
-	if err := migration.TokenMigrate(db); err != nil {
-		log.Error().Err(err).Msg("Gagal melakukan migrasi token")
-	}
-
-	log.Info().Msg("Terhubung ke database!, migration Success")
+	log.Info().Msg("Terhubung ke database!")
 
 	DB = db
 
-	return db
+	return db, nil
 }
 func InitDBTest() *sql.DB {
 
@@ -73,15 +64,6 @@ func InitDBTest() *sql.DB {
 	err = db.Ping()
 	if err != nil {
 		log.Fatal().Err(err).Msg("Gagal melakukan ping ke database")
-	}
-
-	// Panggil fungsi migrate untuk inisialisasi migrasi database
-	if err := migration.UserMigrate(db); err != nil {
-		log.Error().Err(err).Msg("Gagal melakukan migrasi user")
-	}
-
-	if err := migration.TokenMigrate(db); err != nil {
-		log.Error().Err(err).Msg("Gagal melakukan migrasi token")
 	}
 
 	return db
