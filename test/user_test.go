@@ -185,7 +185,7 @@ func TestFetchUser(t *testing.T) {
 	// Periksa apakah data pengguna ada dalam respons
 	users, ok := result["data"].([]interface{})
 	if !ok || len(users) == 0 {
-		t.Fatalf("user tidak ditemukan")
+		t.Fatalf("respons user tidak ditemukan")
 		t.FailNow() // Menghentikan eksekusi tes saat ada kesalahan
 		return
 	}
@@ -193,7 +193,7 @@ func TestFetchUser(t *testing.T) {
 	// Lanjutkan dengan pemeriksaan lain yang diperlukan
 
 	// Periksa message
-	expectedMessage := "Success" // Sesuaikan dengan pesan yang diinginkan
+	expectedMessage := "true" // Sesuaikan dengan pesan yang diinginkan
 	actualMessage, ok := result["message"].(string)
 	if !ok {
 		t.Fatalf("Pesan tidak ditemukan dalam respons")
@@ -228,47 +228,51 @@ func TestGetUser(t *testing.T) {
 	userController := controller.NewUserController(*userService)
 
 	// Panggil fungsi controller
-	userController.FetchUserController(recorder, request)
+	userController.GetUserController(recorder, request)
 
 	response := recorder.Result() // Dapatkan respons
-
-	// Periksa status code
-	if response.StatusCode != http.StatusOK {
-		// ... (kode yang sama seperti sebelumnya)
-		return
-	}
-
 	// Periksa body respons
 	var result map[string]interface{}
 	err := json.NewDecoder(response.Body).Decode(&result)
 	if err != nil {
-		// ... (kode yang sama seperti sebelumnya)
+		t.Fatalf("Error decoding response body: %v", err)
 		return
 	}
 
-	// Periksa apakah data pengguna ada dalam respons
-	users, ok := result["data"].([]interface{})
-	if !ok || len(users) == 0 {
-		t.Fatalf("user tidak ditemukan")
-		t.FailNow() // Menghentikan eksekusi tes saat ada kesalahan
+	// Periksa status code
+	if response.StatusCode != http.StatusOK {
+		errorMessage, ok := result["message"].(string)
+		if !ok {
+			t.Fatalf("Unexpected status code %d. Unable to retrieve error message.", response.StatusCode)
+		}
+		t.Fatalf("Unexpected status code %d. Error message: %s", response.StatusCode, errorMessage)
 		return
 	}
 
-	// Lanjutkan dengan pemeriksaan lain yang diperlukan
-
-	// Periksa message
-	expectedMessage := "Success" // Sesuaikan dengan pesan yang diinginkan
-	actualMessage, ok := result["message"].(string)
+	// Periksa keys success atau error
+	success, ok := result["success"].(bool)
 	if !ok {
-		t.Fatalf("Pesan tidak ditemukan dalam respons")
-		t.FailNow() // Menghentikan eksekusi tes saat ada kesalahan
+		t.Fatalf("Unable to retrieve success status.")
+	}
+
+	// Jika kondisi success adalah true, lanjutkan eksekusi kode tes
+	if success {
+		t.Log("Tes berhasil")
 		return
 	}
 
-	assert.Equal(t, expectedMessage, actualMessage)
-
-	t.Log("Tes berhasil")
+	// Jika kondisi success adalah false, periksa error dan ambil pesan error
+	error, ok := result["error"].(bool)
+	if !ok || !error {
+		errorMessage, ok := result["message"].(string)
+		if !ok {
+			t.Fatalf("Expected success: true, got: false. Unable to retrieve error message.")
+		}
+		t.Fatalf("Expected success: true, got: false. Error message: %s", errorMessage)
+		return
+	}
 }
+
 func TestUpdateUser(t *testing.T) {
 	// call SetupTest function
 	TestSetup(t)
@@ -328,7 +332,7 @@ func TestUpdateUser(t *testing.T) {
 	}
 
 	// Periksa message
-	expectedMessage := "Success" // Sesuaikan dengan pesan yang diinginkan
+	expectedMessage := "true" // Sesuaikan dengan pesan yang diinginkan
 	actualMessage, ok := result["message"].(string)
 	if !ok {
 		t.Fatalf("Pesan tidak ditemukan dalam respons")

@@ -51,8 +51,8 @@ func (service *UserService) CreateUser(id, name, email, password string) error {
 	return nil
 }
 
-func (us *UserService) FetchUser() ([]entities.User, error) {
-	return us.UserRepository.FetchUser()
+func (us *UserService) FetchUsers() ([]entities.User, error) {
+	return us.UserRepository.FetchUsers()
 }
 func (service *UserService) UpdateUser(id string, updatedUser entities.User) (entities.User, error) {
 	// Validate if the user exists
