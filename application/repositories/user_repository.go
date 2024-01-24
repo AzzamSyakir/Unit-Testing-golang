@@ -63,7 +63,6 @@ func (ur *UserRepository) UpdateUser(user entities.User) error {
 
 	return nil
 }
-
 func (ur *UserRepository) DeleteUser(id int) error {
 	result, err := ur.db.Exec("DELETE FROM users WHERE id=?", id)
 	if err != nil {

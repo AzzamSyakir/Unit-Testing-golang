@@ -49,8 +49,6 @@ func (us *UserService) FetchUser() ([]entities.User, error) {
 	return us.UserRepository.FetchUser()
 }
 func (service *UserService) UpdateUser(id string, updatedUser entities.User) (entities.User, error) {
-	// Business logic/validation goes here
-
 	// Validate if the user exists
 	user, err := service.UserRepository.GetUser(id)
 	if err != nil {
@@ -76,11 +74,6 @@ func (service *UserService) UpdateUser(id string, updatedUser entities.User) (en
 	if updatedUser.Email != "" {
 		user.Email = updatedUser.Email
 	}
-
-	// Generate a new UUID for the user
-	newUUID := uuid.New()
-	user.ID = newUUID.String()
-
 	// Set the updated time
 	user.UpdatedAt = time.Now()
 

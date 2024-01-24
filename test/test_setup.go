@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"testing"
 	"testing-golang/config"
+	"testing-golang/migrate"
 
 	"github.com/joho/godotenv"
 )
@@ -18,6 +19,7 @@ func TestSetup(t *testing.T) {
 		t.Fatalf("Error loading .env file: %v", err)
 	}
 	db := config.InitDBTest() // Menginisialisasi database test
+	migrate.MigrateDB(db)     // migrate tabel to database
 	globalDB = db
 	// create connection to database
 }

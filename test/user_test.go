@@ -21,7 +21,7 @@ func TestRegister(t *testing.T) {
 	// call SetupTest function
 	TestSetup(t)
 	// Buat mock untuk http.Request
-	request := httptest.NewRequest(http.MethodPost, "/api/users", bytes.NewBufferString(`{"id": "0658b09c-6fbf-4eff-8aea-3243f837b09a", "password": "rahasia", "name": "asa", "email": "asa@gmail.com"}`))
+	request := httptest.NewRequest(http.MethodPost, "/api/users", bytes.NewBufferString(`{"id": "test-123", "password": "rahasia", "name": "asa", "email": "asa@gmail.com"}`))
 	request.Header.Set("Content-Type", "application/json")
 	request.Header.Set("Accept", "application/json")
 
@@ -159,7 +159,71 @@ func TestFetchUser(t *testing.T) {
 	recorder := httptest.NewRecorder()
 
 	// Buat mock db
-	userRepository := repositories.NewUserRepository(globalDB) //using globalDB that declare in setupTest
+	userRepository := repositories.NewUserRepository(globalDB) // menggunakan globalDB yang dideklarasikan di setupTest
+	userService := service.NewUserService(*userRepository)
+	userController := controller.NewUserController(*userService)
+
+	// Panggil fungsi controller
+	userController.FetchUserController(recorder, request)
+
+	response := recorder.Result() // Dapatkan respons
+
+	// Periksa status code
+	if response.StatusCode != http.StatusOK {
+		// ... (kode yang sama seperti sebelumnya)
+		return
+	}
+
+	// Periksa body respons
+	var result map[string]interface{}
+	err := json.NewDecoder(response.Body).Decode(&result)
+	if err != nil {
+		// ... (kode yang sama seperti sebelumnya)
+		return
+	}
+
+	// Periksa apakah data pengguna ada dalam respons
+	users, ok := result["data"].([]interface{})
+	if !ok || len(users) == 0 {
+		t.Fatalf("Tidak ada data pengguna dalam respons")
+		t.FailNow() // Menghentikan eksekusi tes saat ada kesalahan
+		return
+	}
+
+	// Lanjutkan dengan pemeriksaan lain yang diperlukan
+
+	// Periksa message
+	expectedMessage := "Success" // Sesuaikan dengan pesan yang diinginkan
+	actualMessage, ok := result["message"].(string)
+	if !ok {
+		t.Fatalf("Pesan tidak ditemukan dalam respons")
+		t.FailNow() // Menghentikan eksekusi tes saat ada kesalahan
+		return
+	}
+
+	assert.Equal(t, expectedMessage, actualMessage)
+
+	t.Log("Tes berhasil")
+}
+func TestGetUser(t *testing.T) {
+	// call SetupTest function
+	TestSetup(t)
+
+	// Buat mock untuk http.Request
+	userID := "test-123"
+	requestURL := fmt.Sprintf("/api/users/%s", userID)
+	request := httptest.NewRequest(http.MethodGet, requestURL, nil)
+
+	// Set authorization header with the token
+	request.Header.Set("Authorization", "Bearer "+loginToken)
+	request.Header.Set("Content-Type", "application/json")
+	request.Header.Set("Accept", "application/json")
+
+	// Buat mock untuk http.ResponseWriter
+	recorder := httptest.NewRecorder()
+
+	// Buat mock db
+	userRepository := repositories.NewUserRepository(globalDB) // menggunakan globalDB yang dideklarasikan di setupTest
 	userService := service.NewUserService(*userRepository)
 	userController := controller.NewUserController(*userService)
 
@@ -182,6 +246,7 @@ func TestFetchUser(t *testing.T) {
 		} else {
 			t.Fatalf("Expected status code 200, got %d. Error message: %s", response.StatusCode, errorMessage)
 		}
+
 		t.FailNow() // Menghentikan eksekusi tes saat ada kesalahan
 		return
 	}
@@ -205,19 +270,21 @@ func TestFetchUser(t *testing.T) {
 		t.FailNow() // Menghentikan eksekusi tes saat ada kesalahan
 		return
 	}
+
 	assert.Equal(t, expectedMessage, actualMessage)
 
 	t.Log("Tes berhasil")
 }
 
-func TestGetUser(t *testing.T) {
+func TestUpdateUser(t *testing.T) {
 	// call SetupTest function
 	TestSetup(t)
 
 	// Buat mock untuk http.Request
-	userID := "0658b09c-6fbf-4eff-8aea-3243f837b09a"
+	userID := "test-123"
 	requestURL := fmt.Sprintf("/api/users/%s", userID)
-	request := httptest.NewRequest(http.MethodGet, requestURL, nil)
+	requestBody := bytes.NewBufferString(`{"name": "update success"}`) // Tambahkan body untuk update nama
+	request := httptest.NewRequest(http.MethodPut, requestURL, requestBody)
 
 	// Set authorization header with the token
 	request.Header.Set("Authorization", "Bearer "+loginToken)
