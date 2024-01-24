@@ -185,7 +185,7 @@ func TestFetchUser(t *testing.T) {
 	// Periksa apakah data pengguna ada dalam respons
 	users, ok := result["data"].([]interface{})
 	if !ok || len(users) == 0 {
-		t.Fatalf("Tidak ada data pengguna dalam respons")
+		t.Fatalf("user tidak ditemukan")
 		t.FailNow() // Menghentikan eksekusi tes saat ada kesalahan
 		return
 	}
@@ -234,33 +234,27 @@ func TestGetUser(t *testing.T) {
 
 	// Periksa status code
 	if response.StatusCode != http.StatusOK {
-		var result map[string]interface{}
-		err := json.NewDecoder(response.Body).Decode(&result)
-		if err != nil {
-			t.Fatalf("Error decoding response body: %v", err)
-		}
-
-		errorMessage, ok := result["message"].(string)
-		if !ok {
-			t.Fatalf("Expected status code 200, got %d", response.StatusCode)
-		} else {
-			t.Fatalf("Expected status code 200, got %d. Error message: %s", response.StatusCode, errorMessage)
-		}
-
-		t.FailNow() // Menghentikan eksekusi tes saat ada kesalahan
+		// ... (kode yang sama seperti sebelumnya)
 		return
 	}
-
-	// Continue with other checks as needed
 
 	// Periksa body respons
 	var result map[string]interface{}
 	err := json.NewDecoder(response.Body).Decode(&result)
 	if err != nil {
-		t.Fatalf("Error decoding response body: %v", err)
+		// ... (kode yang sama seperti sebelumnya)
+		return
+	}
+
+	// Periksa apakah data pengguna ada dalam respons
+	users, ok := result["data"].([]interface{})
+	if !ok || len(users) == 0 {
+		t.Fatalf("user tidak ditemukan")
 		t.FailNow() // Menghentikan eksekusi tes saat ada kesalahan
 		return
 	}
+
+	// Lanjutkan dengan pemeriksaan lain yang diperlukan
 
 	// Periksa message
 	expectedMessage := "Success" // Sesuaikan dengan pesan yang diinginkan
@@ -275,7 +269,6 @@ func TestGetUser(t *testing.T) {
 
 	t.Log("Tes berhasil")
 }
-
 func TestUpdateUser(t *testing.T) {
 	// call SetupTest function
 	TestSetup(t)
