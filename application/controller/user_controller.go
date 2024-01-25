@@ -106,7 +106,6 @@ func (uc *UserController) FetchUserController(w http.ResponseWriter, r *http.Req
 	w.Header().Set("Content-Type", "application/json")
 	responses.SuccessResponse(w, "Success", responseData, http.StatusOK)
 }
-
 func (uc *UserController) GetUserController(w http.ResponseWriter, r *http.Request) {
 	// Mendapatkan parameter id
 	vars := mux.Vars(r)
@@ -140,7 +139,6 @@ func (uc *UserController) GetUserController(w http.ResponseWriter, r *http.Reque
 	w.Header().Set("Content-Type", "application/json")
 	responses.SuccessResponse(w, "Success", responseData, http.StatusOK)
 }
-
 func (uc *UserController) UpdateUserController(w http.ResponseWriter, r *http.Request) {
 	// Mendapatkan parameter id
 	vars := mux.Vars(r)
@@ -177,7 +175,6 @@ func (uc *UserController) UpdateUserController(w http.ResponseWriter, r *http.Re
 	w.Header().Set("Content-Type", "application/json")
 	responses.SuccessResponse(w, "Success", updatedData, http.StatusCreated)
 }
-
 func (uc *UserController) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	// Mendapatkan parameter id
 	vars := mux.Vars(r)

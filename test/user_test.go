@@ -21,7 +21,7 @@ func TestRegister(t *testing.T) {
 	// call SetupTest function
 	TestSetup(t)
 	// Buat mock untuk http.Request
-	request := httptest.NewRequest(http.MethodPost, "/api/users", bytes.NewBufferString(`{"id": "test-123", "password": "rahasia", "name": "asa", "email": "asa@gmail.com"}`))
+	request := httptest.NewRequest("POST", "/users", bytes.NewBufferString(`{"id": "test-23", "password": "rahasia", "name": "asa", "email": "asa@gmail.com"}`))
 	request.Header.Set("Content-Type", "application/json")
 	request.Header.Set("Accept", "application/json")
 
@@ -38,7 +38,7 @@ func TestRegister(t *testing.T) {
 	response := recorder.Result() // Dapatkan respons
 
 	// Periksa status code
-	if response.StatusCode != http.StatusOK {
+	if response.StatusCode != http.StatusCreated {
 		var data map[string]interface{}
 		err := json.NewDecoder(response.Body).Decode(&data)
 		if err != nil {
@@ -47,9 +47,9 @@ func TestRegister(t *testing.T) {
 
 		errorMessage, ok := data["message"].(string)
 		if !ok {
-			t.Fatalf("Expected status code %d, got %d", http.StatusOK, response.StatusCode)
+			t.Fatalf("Expected status code %d, got %d", http.StatusCreated, response.StatusCode)
 		} else {
-			t.Fatalf("Expected status code %d, got %d. Error message: %s", http.StatusOK, response.StatusCode, errorMessage)
+			t.Fatalf("Expected status code %d, got %d. Error message: %s", http.StatusCreated, response.StatusCode, errorMessage)
 		}
 		t.FailNow() // Menghentikan eksekusi tes saat ada kesalahan
 		return
@@ -148,7 +148,7 @@ func TestFetchUser(t *testing.T) {
 	// call SetupTest function
 	TestSetup(t)
 	// Buat mock untuk http.Request
-	request := httptest.NewRequest(http.MethodGet, "/api/users", nil)
+	request := httptest.NewRequest("GET", "/users", nil)
 
 	// Set authorization header with the token
 	request.Header.Set("Authorization", "Bearer "+loginToken)
@@ -194,19 +194,17 @@ func TestFetchUser(t *testing.T) {
 		t.FailNow() // Menghentikan eksekusi tes saat ada kesalahan
 		return
 	}
-
 }
 func TestGetUser(t *testing.T) {
 	// Panggil SetupTest function
 	TestSetup(t)
-
 	// Buat mock http request
+	// Buat mock untuk http.Request
 	userID := "test-123"
-	requestURL := fmt.Sprintf("/api/users/%s", userID)
-	request := httptest.NewRequest(http.MethodGet, requestURL, nil)
+	requestURL := fmt.Sprintf("/users/%s", userID)
+	request := httptest.NewRequest("GET", requestURL, nil)
 
 	// Set authorization header with the token
-	request.Header.Set("Authorization", "Bearer "+loginToken)
 	request.Header.Set("Content-Type", "application/json")
 	request.Header.Set("Accept", "application/json")
 
@@ -214,13 +212,12 @@ func TestGetUser(t *testing.T) {
 	recorder := httptest.NewRecorder()
 
 	// Buat mock db
-	userRepository := repositories.NewUserRepository(globalDB) // menggunakan globalDB yang dideklarasikan di setupTest
+	userRepository := repositories.NewUserRepository(globalDB)
 	userService := service.NewUserService(*userRepository)
 	userController := controller.NewUserController(*userService)
 
 	// Panggil fungsi controller
-	userController.FetchUserController(recorder, request)
-
+	userController.GetUserController(recorder, request)
 	response := recorder.Result() // Dapatkan respons
 
 	// Periksa status code
@@ -230,19 +227,8 @@ func TestGetUser(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Error decoding response body: %v", err)
 		}
-
-		// Periksa apakah ada kunci error pada respons
-		if isError, ok := result["Error"].(bool); ok && isError {
-			errorMessage, ok := result["message"].(string)
-			if !ok {
-				t.Fatalf("Expected status code 200, got %d. Unable to retrieve error message.", response.StatusCode)
-			} else {
-				t.Fatalf("Expected status code 200, got %d. Error message: %s", response.StatusCode, errorMessage)
-			}
-		} else {
-			t.Fatalf("Expected status code 200, got %d", response.StatusCode)
-		}
-
+		errorMessage := result["message"].(string)
+		t.Fatalf("Expected status code 200, got %d. Error message: %s", response.StatusCode, errorMessage)
 		t.FailNow() // Menghentikan eksekusi tes saat ada kesalahan
 		return
 	}
@@ -255,10 +241,8 @@ func TestGetUser(t *testing.T) {
 		t.FailNow() // Menghentikan eksekusi tes saat ada kesalahan
 		return
 	}
-
 	t.Log("Tes berhasil")
 }
-
 func TestUpdateUser(t *testing.T) {
 	// call SetupTest function
 	TestSetup(t)
@@ -268,7 +252,6 @@ func TestUpdateUser(t *testing.T) {
 	requestURL := fmt.Sprintf("/api/users/%s", userID)
 	requestBody := bytes.NewBufferString(`{"name": "update success"}`) // Tambahkan body untuk update nama
 	request := httptest.NewRequest(http.MethodPut, requestURL, requestBody)
-
 	// Set authorization header with the token
 	request.Header.Set("Authorization", "Bearer "+loginToken)
 	request.Header.Set("Content-Type", "application/json")
