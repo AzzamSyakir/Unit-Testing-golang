@@ -40,6 +40,10 @@ func TestRegisterAPI(t *testing.T) {
 	}
 
 	// Periksa status code
+	if response.StatusCode == http.StatusNotFound {
+		t.Error("404 page not found")
+		return // Hentikan tes jika status code 404
+	}
 	if response.StatusCode != http.StatusOK {
 		var result map[string]interface{}
 		err := json.NewDecoder(response.Body).Decode(&result)
