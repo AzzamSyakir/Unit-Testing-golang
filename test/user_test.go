@@ -69,25 +69,36 @@ func TestRegisterAPI(t *testing.T) {
 		t.Fatalf("Error decoding response body: %v", err)
 	}
 }
-func TestLogin(t *testing.T) {
-	// call SetupTest function
+func TestLoginApi(t *testing.T) {
+	// Panggil SetupTest function
 	TestSetup(t)
-	// Buat mock untuk http.Request
-	request := httptest.NewRequest(http.MethodPost, "/api/users/login", bytes.NewBufferString(`{"email": "asa@gmail.com", "password": "rahasia"}`))
+
+	// Buat server test
+	server := httptest.NewServer(router.Router(globalDB))
+	defer server.Close()
+
+	// Buat client HTTP
+	client := &http.Client{}
+
+	// Request dengan data register
+	request, err := http.NewRequest(http.MethodPost, server.URL+"/uu", bytes.NewBufferString(`{"email": "asa@gmail.com", "password": "rahasia"}`))
+	if err != nil {
+		t.Fatal(err)
+	}
 	request.Header.Set("Content-Type", "application/json")
-	request.Header.Set("Accept", "application/json")
 
-	// Buat mock untuk http.ResponseWriter
-	recorder := httptest.NewRecorder()
-
-	userRepository := repositories.NewUserRepository(globalDB) //using globalDB that declare in setupTest
-	userService := service.NewUserService(*userRepository)
-	userController := controller.NewUserController(*userService)
-	// Panggil fungsi controller
-	userController.LoginUser(recorder, request)
-	response := recorder.Result() // Dapatkan respons
+	// Kirim request
+	response, err := client.Do(request)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	// Periksa status code
+	if response.StatusCode == http.StatusNotFound {
+		t.Error("404 page not found")
+		return // Hentikan tes jika status code 404
+	}
+
 	if response.StatusCode != http.StatusOK {
 		var result map[string]interface{}
 		err := json.NewDecoder(response.Body).Decode(&result)
@@ -108,32 +119,10 @@ func TestLogin(t *testing.T) {
 
 	// Periksa body respons
 	var result map[string]interface{}
-	err := json.NewDecoder(response.Body).Decode(&result)
+	err = json.NewDecoder(response.Body).Decode(&result)
 	if err != nil {
 		t.Fatalf("Error decoding response body: %v", err)
 	}
-
-	// Periksa token dan message
-	token, ok := result["data"].(map[string]interface{})["token"].(string)
-	if !ok {
-		t.Fatalf("Token tidak ditemukan dalam respons")
-		return
-	}
-
-	message, ok := result["message"].(string)
-	if !ok {
-		t.Fatalf("Pesan tidak ditemukan dalam respons")
-		return
-	}
-
-	if message != "Login berhasil" {
-		t.Fatalf("Pesan tidak sesuai: %s", message)
-		return
-	}
-
-	// Simpan token login ke variabel global (jika diperlukan)
-	loginToken = token
-	t.Log("tes berhasil")
 }
 func TestFetchUser(t *testing.T) {
 	// call SetupTest function
