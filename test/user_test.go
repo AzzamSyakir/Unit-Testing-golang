@@ -44,7 +44,7 @@ func TestRegisterAPI(t *testing.T) {
 		t.Error("404 page not found")
 		return // Hentikan tes jika status code 404
 	}
-	if response.StatusCode != http.StatusOK {
+	if response.StatusCode != http.StatusCreated {
 		var result map[string]interface{}
 		err := json.NewDecoder(response.Body).Decode(&result)
 		if err != nil {
@@ -87,7 +87,6 @@ func TestLoginApi(t *testing.T) {
 		t.Fatal(err)
 	}
 	request.Header.Set("Content-Type", "application/json")
-	request.Header.Set("Authorization", "Bearer "+loginToken) // Set authorization header with the token
 
 	// Kirim request
 	response, err := client.Do(request)
@@ -130,11 +129,19 @@ func TestLoginApi(t *testing.T) {
 		return
 	}
 
-	// Simpan token login ke variabel global
-	loginToken = token
+	loginToken = token // Simpan token login ke variabel global
+
 	t.Log("tes berhasil")
+	t.Logf("Authorization token: %v", loginToken)
 }
 func TestFetchUserApi(t *testing.T) {
+	// Ambil token login
+	token := loginToken
+	if token == "" {
+		t.Fatal("Token tidak tersedia")
+	}
+	t.Logf("Authorization token: %v", token)
+
 	// Panggil SetupTest function
 	TestSetup(t)
 
@@ -151,12 +158,15 @@ func TestFetchUserApi(t *testing.T) {
 		t.Fatal(err)
 	}
 	request.Header.Set("Content-Type", "application/json")
+	request.Header.Set("Authorization", "Bearer "+token) // Set authorization header dengan token yang sudah di-generate pada tes login sebelumnya
 
 	// Kirim request
 	response, err := client.Do(request)
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	defer response.Body.Close()
 
 	// Periksa status code
 	if response.StatusCode == http.StatusNotFound {
@@ -187,6 +197,7 @@ func TestFetchUserApi(t *testing.T) {
 		t.Fatalf("Error decoding response body: %v", err)
 	}
 }
+
 func TestGetUser(t *testing.T) {
 	// Panggil SetupTest function
 	TestSetup(t)
@@ -243,10 +254,8 @@ func TestUpdateUser(t *testing.T) {
 	requestURL := fmt.Sprintf("/api/users/%s", userID)
 	requestBody := bytes.NewBufferString(`{"name": "update success"}`) // Tambahkan body untuk update nama
 	request := httptest.NewRequest(http.MethodPut, requestURL, requestBody)
-	// Set authorization header with the token
-	request.Header.Set("Authorization", "Bearer "+loginToken)
+
 	request.Header.Set("Content-Type", "application/json")
-	request.Header.Set("Accept", "application/json")
 
 	// Buat mock untuk http.ResponseWriter
 	recorder := httptest.NewRecorder()
