@@ -13,7 +13,7 @@ import (
 	"testing-golang/application/service"
 )
 
-var loginToken string
+var loginToken string //initialize global var
 
 func TestRegisterAPI(t *testing.T) {
 	// Panggil SetupTest function
@@ -70,6 +70,7 @@ func TestRegisterAPI(t *testing.T) {
 	}
 	t.Log("tes berhasil")
 }
+
 func TestLoginApi(t *testing.T) {
 	// Panggil SetupTest function
 	TestSetup(t)
@@ -81,7 +82,7 @@ func TestLoginApi(t *testing.T) {
 	// Buat client HTTP
 	client := &http.Client{}
 
-	// Request dengan data register
+	// Request dengan data login
 	request, err := http.NewRequest(http.MethodPost, server.URL+"/users/login", bytes.NewBufferString(`{"email": "tes@gmail.com", "password": "rahasia"}`))
 	if err != nil {
 		t.Fatal(err)
@@ -122,6 +123,7 @@ func TestLoginApi(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error decoding response body: %v", err)
 	}
+
 	// Periksa token
 	token, ok := result["data"].(map[string]interface{})["token"].(string)
 	if !ok {
@@ -129,11 +131,18 @@ func TestLoginApi(t *testing.T) {
 		return
 	}
 
-	loginToken = token // Simpan token login ke variabel global
+	// Simpan token login ke variabel global
+	loginToken = token // Simpan token secara langsung
+	t.Logf("Authorization token: %v", loginToken)
 
 	t.Log("tes berhasil")
-	t.Logf("Authorization token: %v", loginToken)
+
+	// Pastikan token tidak kosong
+	if loginToken == "" {
+		t.Errorf("Token is empty")
+	}
 }
+
 func TestFetchUserApi(t *testing.T) {
 	// Ambil token login
 	token := loginToken

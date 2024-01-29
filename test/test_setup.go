@@ -21,5 +21,7 @@ func TestSetup(t *testing.T) {
 	db := config.InitDBTest() // Menginisialisasi database test
 	migrate.MigrateDB(db)     // migrate tabel to database
 	globalDB = db
-	// create connection to database
+	if globalDB == nil {
+		t.Errorf("database null")
+	}
 }
