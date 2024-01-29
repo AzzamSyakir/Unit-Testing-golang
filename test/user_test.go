@@ -68,6 +68,7 @@ func TestRegisterAPI(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error decoding response body: %v", err)
 	}
+	t.Log("tes berhasil")
 }
 func TestLoginApi(t *testing.T) {
 	// Panggil SetupTest function
@@ -81,7 +82,7 @@ func TestLoginApi(t *testing.T) {
 	client := &http.Client{}
 
 	// Request dengan data register
-	request, err := http.NewRequest(http.MethodPost, server.URL+"/uu", bytes.NewBufferString(`{"email": "asa@gmail.com", "password": "rahasia"}`))
+	request, err := http.NewRequest(http.MethodPost, server.URL+"/users/login", bytes.NewBufferString(`{"email": "tes@gmail.com", "password": "rahasia"}`))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -115,7 +116,68 @@ func TestLoginApi(t *testing.T) {
 		return
 	}
 
-	// Continue with other checks as needed
+	// Periksa body respons
+	var result map[string]interface{}
+	err = json.NewDecoder(response.Body).Decode(&result)
+	if err != nil {
+		t.Fatalf("Error decoding response body: %v", err)
+	}
+	// Periksa token
+	token, ok := result["data"].(map[string]interface{})["token"].(string)
+	if !ok {
+		t.Fatalf("Token tidak ditemukan dalam respons")
+		return
+	}
+
+	// Simpan token login ke variabel global
+	loginToken = token
+	t.Log("tes berhasil")
+}
+func TestFetchUserApi(t *testing.T) {
+	// Panggil SetupTest function
+	TestSetup(t)
+
+	// Buat server test
+	server := httptest.NewServer(router.Router(globalDB))
+	defer server.Close()
+
+	// Buat client HTTP
+	client := &http.Client{}
+
+	// Request dengan data register
+	request, err := http.NewRequest(http.MethodGet, server.URL+"/users", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	request.Header.Set("Content-Type", "application/json")
+
+	// Kirim request
+	response, err := client.Do(request)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Periksa status code
+	if response.StatusCode == http.StatusNotFound {
+		t.Error("404 page not found")
+		return // Hentikan tes jika status code 404
+	}
+
+	if response.StatusCode != http.StatusOK {
+		var result map[string]interface{}
+		err := json.NewDecoder(response.Body).Decode(&result)
+		if err != nil {
+			t.Fatalf("Error decoding response body: %v", err)
+		}
+
+		errorMessage, ok := result["message"].(string)
+		if !ok {
+			t.Fatalf("Expected status code 200, got %d", response.StatusCode)
+		} else {
+			t.Fatalf("Expected status code 200, got %d. Error message: %s", response.StatusCode, errorMessage)
+		}
+		return
+	}
 
 	// Periksa body respons
 	var result map[string]interface{}
@@ -123,6 +185,7 @@ func TestLoginApi(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error decoding response body: %v", err)
 	}
+
 }
 func TestFetchUser(t *testing.T) {
 	// call SetupTest function
