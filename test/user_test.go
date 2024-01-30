@@ -7,10 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"testing-golang/application/controller"
-	"testing-golang/application/repositories"
 	"testing-golang/application/router"
-	"testing-golang/application/service"
 )
 
 var loginToken string //initialize global var
@@ -272,32 +269,49 @@ func TestGetUserApi(t *testing.T) {
 		t.Fatalf("Error decoding response body: %v", err)
 	}
 }
-func TestUpdateUser(t *testing.T) {
-	// call SetupTest function
+func TestUpdateUserApi(t *testing.T) {
+	// calling test login to het token value
+	TestLoginApi(t)
+	// get token login
+	token := loginToken
+	if token == "" {
+		t.Fatal("Token tidak tersedia")
+	}
+
+	// calling SetupTest function
 	TestSetup(t)
 
-	// Buat mock untuk http.Request
+	// Buat server test
+	server := httptest.NewServer(router.Router(globalDB))
+	defer server.Close()
+
+	// Buat client HTTP
+	client := &http.Client{}
 	userID := "test-123"
-	requestURL := fmt.Sprintf("/api/users/%s", userID)
 	requestBody := bytes.NewBufferString(`{"name": "update success"}`) // Tambahkan body untuk update nama
-	request := httptest.NewRequest(http.MethodPut, requestURL, requestBody)
-
+	requestURL := fmt.Sprintf("/users/%s", userID)
+	// Request dengan data register
+	request, err := http.NewRequest(http.MethodPut, server.URL+requestURL, requestBody)
+	if err != nil {
+		t.Fatal(err)
+	}
 	request.Header.Set("Content-Type", "application/json")
+	request.Header.Set("Authorization", "Bearer "+token) // Set authorization header dengan token yang sudah di-generate pada tes login sebelumnya
 
-	// Buat mock untuk http.ResponseWriter
-	recorder := httptest.NewRecorder()
+	// Kirim request
+	response, err := client.Do(request)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	// Buat mock db
-	userRepository := repositories.NewUserRepository(globalDB) // menggunakan globalDB yang dideklarasikan di setupTest
-	userService := service.NewUserService(*userRepository)
-	userController := controller.NewUserController(*userService)
-
-	// Panggil fungsi controller
-	userController.UpdateUserController(recorder, request)
-
-	response := recorder.Result() // Dapatkan respons
+	defer response.Body.Close()
 
 	// Periksa status code
+	if response.StatusCode == http.StatusNotFound {
+		t.Error("404 page not found")
+		return // Hentikan tes jika status code 404
+	}
+
 	if response.StatusCode != http.StatusOK {
 		var result map[string]interface{}
 		err := json.NewDecoder(response.Body).Decode(&result)
@@ -311,19 +325,13 @@ func TestUpdateUser(t *testing.T) {
 		} else {
 			t.Fatalf("Expected status code 200, got %d. Error message: %s", response.StatusCode, errorMessage)
 		}
-
-		t.FailNow() // Menghentikan eksekusi tes saat ada kesalahan
 		return
 	}
 
 	// Periksa body respons
 	var result map[string]interface{}
-	err := json.NewDecoder(response.Body).Decode(&result)
+	err = json.NewDecoder(response.Body).Decode(&result)
 	if err != nil {
 		t.Fatalf("Error decoding response body: %v", err)
-		t.FailNow() // Menghentikan eksekusi tes saat ada kesalahan
-		return
 	}
-
-	t.Log("Tes berhasil")
 }
