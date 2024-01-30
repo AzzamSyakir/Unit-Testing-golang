@@ -2,20 +2,36 @@ package test
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"testing-golang/application/router"
+	"testing-golang/config"
+	"testing-golang/migrate"
+
+	"github.com/joho/godotenv"
 )
 
-var loginToken string //initialize global var
+var loginToken string
+var globalDB *sql.DB
+
+func TestSetup(t *testing.T) {
+	envPath := "/var/www/html/testing-golang/.env" // Sesuaikan dengan path env Anda
+	if err := godotenv.Load(envPath); err != nil {
+		t.Fatalf("Error loading .env file: %v", err)
+	}
+	db := config.InitDBTest() // Menginisialisasi database test
+	migrate.MigrateDB(db)     // migrate tabel to database
+	globalDB = db
+	if globalDB == nil {
+		t.Errorf("database null")
+	}
+}
 
 func TestRegisterAPI(t *testing.T) {
-	// Panggil SetupTest function
-	TestSetup(t)
-
 	// Buat server test
 	server := httptest.NewServer(router.Router(globalDB))
 	defer server.Close()
@@ -69,9 +85,6 @@ func TestRegisterAPI(t *testing.T) {
 }
 
 func TestLoginApi(t *testing.T) {
-	// Panggil SetupTest function
-	TestSetup(t)
-
 	// Buat server test
 	server := httptest.NewServer(router.Router(globalDB))
 	defer server.Close()
@@ -140,17 +153,13 @@ func TestLoginApi(t *testing.T) {
 }
 
 func TestFetchUserApi(t *testing.T) {
-	// calling test login to het token value
+	// calling test login to set token value
 	TestLoginApi(t)
 	// get token login
 	token := loginToken
 	if token == "" {
 		t.Fatal("Token tidak tersedia")
 	}
-
-	// calling SetupTest function
-	TestSetup(t)
-
 	// Buat server test
 	server := httptest.NewServer(router.Router(globalDB))
 	defer server.Close()
@@ -205,7 +214,7 @@ func TestFetchUserApi(t *testing.T) {
 }
 
 func TestGetUserApi(t *testing.T) {
-	// calling test login to het token value
+	// calling test login to set token value
 	TestLoginApi(t)
 	// get token login
 	token := loginToken
@@ -214,7 +223,6 @@ func TestGetUserApi(t *testing.T) {
 	}
 
 	// calling SetupTest function
-	TestSetup(t)
 
 	// Buat server test
 	server := httptest.NewServer(router.Router(globalDB))
@@ -270,7 +278,7 @@ func TestGetUserApi(t *testing.T) {
 	}
 }
 func TestUpdateUserApi(t *testing.T) {
-	// calling test login to het token value
+	// calling test login to set token value
 	TestLoginApi(t)
 	// get token login
 	token := loginToken
@@ -279,7 +287,6 @@ func TestUpdateUserApi(t *testing.T) {
 	}
 
 	// calling SetupTest function
-	TestSetup(t)
 
 	// Buat server test
 	server := httptest.NewServer(router.Router(globalDB))
@@ -336,7 +343,7 @@ func TestUpdateUserApi(t *testing.T) {
 	}
 }
 func TestDeleteUserApi(t *testing.T) {
-	// calling test login to het token value
+	// calling test login to set token value
 	TestLoginApi(t)
 	// get token login
 	token := loginToken
@@ -345,7 +352,6 @@ func TestDeleteUserApi(t *testing.T) {
 	}
 
 	// calling SetupTest function
-	TestSetup(t)
 
 	// Buat server test
 	server := httptest.NewServer(router.Router(globalDB))
