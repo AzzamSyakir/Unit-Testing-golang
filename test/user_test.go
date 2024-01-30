@@ -366,7 +366,6 @@ func TestDeleteUserApi(t *testing.T) {
 		fmt.Printf("Error creating request, error: %v\n", err)
 		return
 	}
-	fmt.Printf("Request URL: %s\n", requestURL) //print url to make sure the url is correct
 
 	request.Header.Set("Content-Type", "application/json")
 	request.Header.Set("Authorization", "Bearer "+token) // Set authorization header dengan token yang sudah di-generate pada tes login sebelumnya
