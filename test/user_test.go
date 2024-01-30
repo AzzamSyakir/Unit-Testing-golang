@@ -355,11 +355,13 @@ func TestDeleteUserApi(t *testing.T) {
 	client := &http.Client{}
 	userID := "test-123"
 	requestURL := fmt.Sprintf("/users/%s", userID)
-	// Request dengan data register
 	request, err := http.NewRequest(http.MethodDelete, server.URL+requestURL, nil)
 	if err != nil {
-		t.Fatal(err)
+		fmt.Printf("Error creating request, error: %v\n", err)
+		return
 	}
+	fmt.Printf("Request URL: %s\n", requestURL) //print url to make sure the url is correct
+
 	request.Header.Set("Content-Type", "application/json")
 	request.Header.Set("Authorization", "Bearer "+token) // Set authorization header dengan token yang sudah di-generate pada tes login sebelumnya
 

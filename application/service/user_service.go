@@ -100,11 +100,14 @@ func (service *UserService) UpdateUser(id string, updatedUser entities.User) (en
 	return updatedData, nil
 }
 
-func (service *UserService) DeleteUser(id int) error {
-	// Business logic/validation goes here
-
+func (service *UserService) DeleteUser(id string) error {
+	// call repositoryto Delete Token  in the db
+	err := service.UserRepository.DeleteToken(id)
+	if err != nil {
+		return err
+	}
 	// Call repository to delete user in the database
-	err := service.UserRepository.DeleteUser(id)
+	err = service.UserRepository.DeleteUser(id)
 	if err != nil {
 		return err
 	}
