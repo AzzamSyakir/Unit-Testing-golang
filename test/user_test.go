@@ -133,7 +133,6 @@ func TestLoginApi(t *testing.T) {
 
 	// Simpan token login ke variabel global
 	loginToken = token // Simpan token secara langsung
-	t.Logf("Authorization token: %v", loginToken)
 
 	t.Log("tes berhasil")
 
@@ -144,14 +143,15 @@ func TestLoginApi(t *testing.T) {
 }
 
 func TestFetchUserApi(t *testing.T) {
-	// Ambil token login
+	// calling test login to het token value
+	TestLoginApi(t)
+	// get token login
 	token := loginToken
 	if token == "" {
 		t.Fatal("Token tidak tersedia")
 	}
-	t.Logf("Authorization token: %v", token)
 
-	// Panggil SetupTest function
+	// calling SetupTest function
 	TestSetup(t)
 
 	// Buat server test
