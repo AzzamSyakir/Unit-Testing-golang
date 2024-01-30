@@ -335,3 +335,68 @@ func TestUpdateUserApi(t *testing.T) {
 		t.Fatalf("Error decoding response body: %v", err)
 	}
 }
+func TestDeleteUserApi(t *testing.T) {
+	// calling test login to het token value
+	TestLoginApi(t)
+	// get token login
+	token := loginToken
+	if token == "" {
+		t.Fatal("Token tidak tersedia")
+	}
+
+	// calling SetupTest function
+	TestSetup(t)
+
+	// Buat server test
+	server := httptest.NewServer(router.Router(globalDB))
+	defer server.Close()
+
+	// Buat client HTTP
+	client := &http.Client{}
+	userID := "test-123"
+	requestURL := fmt.Sprintf("/users/%s", userID)
+	// Request dengan data register
+	request, err := http.NewRequest(http.MethodDelete, server.URL+requestURL, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	request.Header.Set("Content-Type", "application/json")
+	request.Header.Set("Authorization", "Bearer "+token) // Set authorization header dengan token yang sudah di-generate pada tes login sebelumnya
+
+	// Kirim request
+	response, err := client.Do(request)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer response.Body.Close()
+
+	// Periksa status code
+	if response.StatusCode == http.StatusNotFound {
+		t.Error("404 page not found")
+		return // Hentikan tes jika status code 404
+	}
+
+	if response.StatusCode != http.StatusOK {
+		var result map[string]interface{}
+		err := json.NewDecoder(response.Body).Decode(&result)
+		if err != nil {
+			t.Fatalf("Error decoding response body: %v", err)
+		}
+
+		errorMessage, ok := result["message"].(string)
+		if !ok {
+			t.Fatalf("Expected status code 200, got %d", response.StatusCode)
+		} else {
+			t.Fatalf("Expected status code 200, got %d. Error message: %s", response.StatusCode, errorMessage)
+		}
+		return
+	}
+
+	// Periksa body respons
+	var result map[string]interface{}
+	err = json.NewDecoder(response.Body).Decode(&result)
+	if err != nil {
+		t.Fatalf("Error decoding response body: %v", err)
+	}
+}
