@@ -173,7 +173,7 @@ func (uc *UserController) UpdateUserController(w http.ResponseWriter, r *http.Re
 
 	// Return response with only updated data
 	w.Header().Set("Content-Type", "application/json")
-	responses.SuccessResponse(w, "Success", updatedData, http.StatusCreated)
+	responses.SuccessResponse(w, "Success", updatedData, http.StatusOK)
 }
 func (uc *UserController) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	// Mendapatkan parameter id
