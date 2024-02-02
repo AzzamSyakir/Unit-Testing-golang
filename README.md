@@ -8,9 +8,6 @@ Welcome to the **Testing Golang Project Template!** This project provides a stru
 - Features
 - Getting Started
 - Testing
-- Project Structure
-- Dependencies
-- Contributing
 
 ## Introduction
 
