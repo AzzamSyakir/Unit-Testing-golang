@@ -244,5 +244,5 @@ func (us *UserController) LogoutUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Mengembalikan token yang baru setelah logout
-	responses.OtherResponses(w, "logout berhasil", http.StatusCreated)
+	responses.OtherResponses(w, "logout berhasil", http.StatusOK)
 }
