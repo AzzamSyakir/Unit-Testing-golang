@@ -11,20 +11,36 @@ import (
 	"testing-golang/config"
 	"testing-golang/internal/delivery/http/router"
 	"testing-golang/migrate"
+	"time"
 
 	"github.com/joho/godotenv"
 )
 
 var loginToken string
 var globalDB *sql.DB
+var start time.Time // Variabel global untuk menyimpan waktu awal eksekusi
 
 func TestSetup(t *testing.T) {
-	envPath := "/var/www/html/testing-golang/.env" // Sesuaikan dengan path env Anda
+	start = time.Now()                                              // Mulai menghitung waktu eksekusi
+	envPath := "/home/asa/Documents/project/go/testing-golang/.env" // Sesuaikan dengan path env Anda
 	if err := godotenv.Load(envPath); err != nil {
 		t.Fatalf("Error loading .env file: %v", err)
 	}
-	db := config.InitDBTest() // Menginisialisasi database test
-	migrate.MigrateDB(db)     // migrate tabel to database
+
+	db, err := config.InitDBTest() // Menginisialisasi database test
+	if err != nil {
+		t.Errorf("Error initializing database: %v", err)
+		return
+	}
+
+	defer db.Close() // Tutup koneksi database setelah test selesai
+
+	err = migrate.MigrateDB(db) // migrate tabel to database
+	if err != nil {
+		t.Errorf("Error migrating database: %v", err)
+		return
+	}
+
 	globalDB = db
 	if globalDB == nil {
 		t.Errorf("database null")
@@ -470,4 +486,5 @@ func TestDeleteUserApi(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error decoding response body: %v", err)
 	}
+	t.Logf("Test  took %v", time.Since(start))
 }
