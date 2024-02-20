@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 	"testing-golang/config"
 	"testing-golang/internal/delivery/http/router"
@@ -487,4 +488,27 @@ func TestDeleteUserApi(t *testing.T) {
 		t.Fatalf("Error decoding response body: %v", err)
 	}
 	t.Logf("Test  took %v", time.Since(start))
+}
+
+func TestMain(m *testing.M) {
+	// Buat objek testing.T
+	t := &testing.T{}
+	// panggil TestSetup
+	TestSetup(t)
+	// Mulai menghitung waktu eksekusi
+	startTime := time.Now()
+	// Jalankan semua fungsi tes
+	TestRegisterAPI(t)
+	TestLoginApi(t)
+	TestFetchUserApi(t)
+	TestGetUserApi(t)
+	TestUpdateUserApi(t)
+	TestLogoutUserApi(t)
+	TestDeleteUserApi(t)
+
+	// Hitung waktu eksekusi
+	elapsedTime := time.Since(startTime)
+	t.Logf("Total execution time: %v", elapsedTime)
+
+	os.Exit(m.Run())
 }
