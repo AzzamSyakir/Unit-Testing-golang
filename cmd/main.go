@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"testing-golang/application/router"
 	"testing-golang/config"
+	"testing-golang/internal/delivery/http/router"
 	"testing-golang/migrate"
 
 	"github.com/joho/godotenv"
