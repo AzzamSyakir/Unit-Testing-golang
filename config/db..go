@@ -66,5 +66,9 @@ func InitDBTest() (*sql.DB, error) {
 		log.Fatal().Err(err).Msg("Gagal melakukan ping ke database")
 	}
 
+	log.Info().Msg("Terhubung ke database!")
+
+	DB = db
+
 	return db, nil
 }
