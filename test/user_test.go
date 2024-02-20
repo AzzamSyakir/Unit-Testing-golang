@@ -5,36 +5,30 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 	"testing-golang/config"
 	"testing-golang/internal/delivery/http/router"
 	"testing-golang/migrate"
-	"time"
 
 	"github.com/joho/godotenv"
 )
 
 var loginToken string
 var globalDB *sql.DB
-var start time.Time // Variabel global untuk menyimpan waktu awal eksekusi
 
 func TestSetup(t *testing.T) {
-	start = time.Now()                                              // Mulai menghitung waktu eksekusi
 	envPath := "/home/asa/Documents/project/go/testing-golang/.env" // Sesuaikan dengan path env Anda
 	if err := godotenv.Load(envPath); err != nil {
 		t.Fatalf("Error loading .env file: %v", err)
 	}
 
-	db, err := config.InitDBTest() // Menginisialisasi database test
+	db, err := config.InitDBTest()
 	if err != nil {
-		t.Errorf("Error initializing database: %v", err)
-		return
+		log.Fatal("Error connecting to database:", err)
 	}
-
-	defer db.Close() // Tutup koneksi database setelah test selesai
 
 	err = migrate.MigrateDB(db) // migrate tabel to database
 	if err != nil {
@@ -46,12 +40,15 @@ func TestSetup(t *testing.T) {
 	if globalDB == nil {
 		t.Errorf("database null")
 	}
+	fmt.Printf("global db:%v\n", globalDB)
 }
 
 func TestRegisterAPI(t *testing.T) {
 	// Buat server test
 	server := httptest.NewServer(router.Router(globalDB))
-	defer server.Close()
+	if server == nil {
+		t.Fatal("Server is nil")
+	}
 
 	// Buat client HTTP
 	client := &http.Client{}
@@ -487,28 +484,4 @@ func TestDeleteUserApi(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error decoding response body: %v", err)
 	}
-	t.Logf("Test  took %v", time.Since(start))
-}
-
-func TestMain(m *testing.M) {
-	// Buat objek testing.T
-	t := &testing.T{}
-	// panggil TestSetup
-	TestSetup(t)
-	// Mulai menghitung waktu eksekusi
-	startTime := time.Now()
-	// Jalankan semua fungsi tes
-	TestRegisterAPI(t)
-	TestLoginApi(t)
-	TestFetchUserApi(t)
-	TestGetUserApi(t)
-	TestUpdateUserApi(t)
-	TestLogoutUserApi(t)
-	TestDeleteUserApi(t)
-
-	// Hitung waktu eksekusi
-	elapsedTime := time.Since(startTime)
-	t.Logf("Total execution time: %v", elapsedTime)
-
-	os.Exit(m.Run())
 }
