@@ -13,12 +13,13 @@ import (
 )
 
 func main() {
-	err := godotenv.Load()
+	envpath := ".env"
+	err := godotenv.Load(envpath)
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
 	// Initialize Redis
-	cache.InitRedis()
+	cache.InitRedis(envpath)
 	defer func() {
 		if err := cache.RedisClient.Close(); err != nil {
 			log.Println("Error closing Redis:", err)
