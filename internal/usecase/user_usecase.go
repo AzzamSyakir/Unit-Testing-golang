@@ -146,6 +146,7 @@ func (c *UserUseCase) Logout(tokenString string) error {
 	return err
 }
 
+// basic user's operations
 func (c *UserUseCase) Fetch() ([]entity.User, error) {
 	return c.UserRepository.FetchUsers()
 }
