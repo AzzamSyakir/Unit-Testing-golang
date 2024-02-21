@@ -1,6 +1,8 @@
 # github.com/cespare/xxhash/v2 v2.2.0
 ## explicit; go 1.11
 github.com/cespare/xxhash/v2
+# github.com/davecgh/go-spew v1.1.1
+## explicit
 # github.com/dgrijalva/jwt-go v3.2.0+incompatible
 ## explicit
 github.com/dgrijalva/jwt-go
@@ -25,6 +27,8 @@ github.com/mattn/go-colorable
 # github.com/mattn/go-isatty v0.0.20
 ## explicit; go 1.15
 github.com/mattn/go-isatty
+# github.com/pmezard/go-difflib v1.0.0
+## explicit
 # github.com/redis/go-redis/v9 v9.5.0
 ## explicit; go 1.18
 github.com/redis/go-redis/v9
@@ -41,6 +45,8 @@ github.com/rs/zerolog
 github.com/rs/zerolog/internal/cbor
 github.com/rs/zerolog/internal/json
 github.com/rs/zerolog/log
+# github.com/stretchr/testify v1.8.4
+## explicit; go 1.20
 # golang.org/x/crypto v0.15.0
 ## explicit; go 1.18
 golang.org/x/crypto/bcrypt
@@ -48,3 +54,5 @@ golang.org/x/crypto/blowfish
 # golang.org/x/sys v0.14.0
 ## explicit; go 1.18
 golang.org/x/sys/unix
+# gopkg.in/yaml.v3 v3.0.1
+## explicit
