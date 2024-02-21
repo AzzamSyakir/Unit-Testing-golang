@@ -195,7 +195,9 @@ func (c *UserUseCase) Update(id string, updatedUser entity.User) (entity.User, e
 	return updatedData, nil
 }
 func (usecase *UserUseCase) Delete(id string) error {
-
+	// delete token cache
+	RedisKey := fmt.Sprintf("tokens:%s", id) // Gunakan token + id user  sebagai RedisKey
+	cache.DeleteCached(RedisKey)
 	// Call repository to delete user in the database
 	err := usecase.UserRepository.DeleteUser(id)
 	if err != nil {

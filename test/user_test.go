@@ -6,9 +6,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 	"testing-golang/cache"
 	"testing-golang/config"
@@ -21,6 +21,24 @@ import (
 var loginToken string
 var globalDB *sql.DB
 
+func TestSetup(t *testing.T) {
+	envpath := "../.env" //intialize relative path
+	// Initialize Redis
+	cache.InitRedis(envpath)
+
+	if err := godotenv.Load(envpath); err != nil {
+		t.Fatalf("Error loading .env file: %v", err)
+	}
+	db, err := config.InitDBTest() // Menginisialisasi database test
+	if err != nil {
+		log.Fatal("Error connecting to database:", err)
+	}
+	migrate.MigrateDB(db) // migrate tabel to database
+	globalDB = db
+	if globalDB == nil {
+		t.Errorf("database null")
+	}
+}
 func TestRegisterAPI(t *testing.T) {
 	// Buat server test
 	server := httptest.NewServer(router.Router(globalDB))
@@ -135,8 +153,6 @@ func TestLoginApi(t *testing.T) {
 		t.Errorf("Token is empty")
 	}
 
-	// Tutup client Redis setelah menyimpan token
-	defer cache.RedisClient.Close() // Pindahkan penutupan ke sini
 }
 
 func TestFetchUserApi(t *testing.T) {
@@ -420,38 +436,4 @@ func TestDeleteUserApi(t *testing.T) {
 		t.Fatalf("Error decoding response body: %v", err)
 	}
 
-}
-
-func TestMain(m *testing.M) {
-	// Inisialisasi .env
-	envpath := "../.env"
-	if err := godotenv.Load(envpath); err != nil {
-		panic("Error loading .env file: " + err.Error())
-	}
-
-	// Inisialisasi Redis
-	cache.InitRedis(envpath)
-
-	// Inisialisasi database test
-	db, err := config.InitDBTest()
-	if err != nil {
-		panic("Error connecting to database: " + err.Error())
-	}
-	defer db.Close()
-
-	// Migrasi tabel ke database
-	if err := migrate.MigrateDB(db); err != nil {
-		panic("Error migrating database: " + err.Error())
-	}
-
-	// Menjalankan semua tes
-	exitCode := m.Run()
-
-	// Mengakhiri koneksi Redis
-	if err := cache.RedisClient.Close(); err != nil {
-		panic("Error closing Redis: " + err.Error())
-	}
-
-	// Keluar dengan exit code yang sesuai
-	os.Exit(exitCode)
 }
