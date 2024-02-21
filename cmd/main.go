@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"testing-golang/cache"
 	"testing-golang/config"
 	"testing-golang/internal/delivery/http/router"
 	"testing-golang/migrate"
@@ -16,6 +17,13 @@ func main() {
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
+	// Initialize Redis
+	cache.InitRedis()
+	defer func() {
+		if err := cache.RedisClient.Close(); err != nil {
+			log.Println("Error closing Redis:", err)
+		}
+	}()
 
 	// Cek argumen command line
 	if len(os.Args) > 1 {
