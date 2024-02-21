@@ -52,7 +52,6 @@ func TestMain(m *testing.M) {
 
 	os.Exit(code)
 }
-
 func TestRegisterAPI(t *testing.T) {
 	// Buat server test
 	server := httptest.NewServer(router.Router(globalDB))
