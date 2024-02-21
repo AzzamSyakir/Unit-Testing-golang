@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 	"testing-golang/cache"
 	"testing-golang/config"
@@ -20,28 +21,38 @@ import (
 var loginToken string
 var globalDB *sql.DB
 
-func TestSetup(t *testing.T) {
-	envPath := "/home/asa/Documents/project/go/testing-golang/.env" // Sesuaikan dengan path absolute env Anda
-	if err := godotenv.Load(envPath); err != nil {
-		t.Fatalf("Error loading .env file: %v", err)
+func TestMain(m *testing.M) {
+	envpath := "../.env"
+	if err := godotenv.Load(envpath); err != nil { //using relative path
+		log.Fatalf("Error loading .env file: %v", err)
 	}
-	db, err := config.InitDBTest() // Menginisialisasi database test
-	if err != nil {
-		log.Fatal("Error connecting to database:", err)
-	}
-	migrate.MigrateDB(db) // migrate tabel to database
-	globalDB = db
-	if globalDB == nil {
-		t.Errorf("database null")
-	}
+
 	// Initialize Redis
-	cache.InitRedis()
+	cache.InitRedis(envpath)
 	defer func() {
 		if err := cache.RedisClient.Close(); err != nil {
 			log.Println("Error closing Redis:", err)
 		}
 	}()
+
+	// Menginisialisasi database test
+	db, err := config.InitDBTest()
+	if err != nil {
+		log.Fatalf("Error connecting to database: %v", err)
+	}
+
+	// Migrate tabel ke database
+	migrate.MigrateDB(db)
+
+	// Jalankan tes dengan database dan Redis yang sudah diinisialisasi
+	code := m.Run()
+
+	// Tutup koneksi database setelah tes selesai
+	db.Close() // Pastikan fungsi Close() tersedia untuk database Anda
+
+	os.Exit(code)
 }
+
 func TestRegisterAPI(t *testing.T) {
 	// Buat server test
 	server := httptest.NewServer(router.Router(globalDB))
