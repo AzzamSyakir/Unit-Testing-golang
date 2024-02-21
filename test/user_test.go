@@ -8,7 +8,6 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 	"testing-golang/cache"
 	"testing-golang/config"
@@ -21,12 +20,12 @@ import (
 var loginToken string
 var globalDB *sql.DB
 
-func TestMain(m *testing.M) {
+func TestSetup(t *testing.T) {
 	envpath := "../.env"
-	if err := godotenv.Load(envpath); err != nil { //using relative path
-		log.Fatalf("Error loading .env file: %v", err)
+	err := godotenv.Load(envpath)
+	if err != nil {
+		log.Fatal("Error loading .env file")
 	}
-
 	// Initialize Redis
 	cache.InitRedis(envpath)
 	defer func() {
@@ -34,23 +33,15 @@ func TestMain(m *testing.M) {
 			log.Println("Error closing Redis:", err)
 		}
 	}()
-
-	// Menginisialisasi database test
-	db, err := config.InitDBTest()
+	db, err := config.InitDBTest() // Menginisialisasi database test
 	if err != nil {
-		log.Fatalf("Error connecting to database: %v", err)
+		log.Fatal("Error connecting to database:", err)
 	}
-
-	// Migrate tabel ke database
-	migrate.MigrateDB(db)
-
-	// Jalankan tes dengan database dan Redis yang sudah diinisialisasi
-	code := m.Run()
-
-	// Tutup koneksi database setelah tes selesai
-	db.Close() // Pastikan fungsi Close() tersedia untuk database Anda
-
-	os.Exit(code)
+	migrate.MigrateDB(db) // migrate tabel to database
+	globalDB = db
+	if globalDB == nil {
+		t.Errorf("database null")
+	}
 }
 func TestRegisterAPI(t *testing.T) {
 	// Buat server test
@@ -97,6 +88,7 @@ func TestRegisterAPI(t *testing.T) {
 	}
 	t.Log("tes berhasil")
 }
+
 func TestLoginApi(t *testing.T) {
 	// Buat server test
 	server := httptest.NewServer(router.Router(globalDB))
@@ -104,7 +96,7 @@ func TestLoginApi(t *testing.T) {
 	// Buat client HTTP
 	client := &http.Client{}
 	// Request dengan data register
-	request, err := http.NewRequest(http.MethodPost, server.URL+"/users/login", bytes.NewBufferString(`{"email": "tes@gmail.com", "password": "rahasia"}`))
+	request, err := http.NewRequest(http.MethodPost, server.URL+"/users/login", bytes.NewBufferString(`{"email": "tes@gmail.com","password": "rahasia"}`))
 	if err != nil {
 		t.Fatal(err)
 	}
