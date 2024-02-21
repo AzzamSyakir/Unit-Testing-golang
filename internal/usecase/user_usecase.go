@@ -82,12 +82,8 @@ func (c *UserUseCase) Login(email string, password string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	// Mendapatkan UUID baru
-	newUUID := uuid.New()
 
-	tokensID := newUUID.String()
-
-	redisKey := fmt.Sprintf("user:%s", tokensID) // Gunakan id token sebagai RedisKey
+	redisKey := fmt.Sprintf("tokens:%s", user.ID) // Gunakan id token sebagai RedisKey
 
 	//struct token dan user id
 	type TokenAndUserID struct {
@@ -199,13 +195,9 @@ func (c *UserUseCase) Update(id string, updatedUser entity.User) (entity.User, e
 	return updatedData, nil
 }
 func (usecase *UserUseCase) Delete(id string) error {
-	// call repositoryto Delete Token  in the db
-	err := usecase.UserRepository.DeleteToken(id)
-	if err != nil {
-		return err
-	}
+
 	// Call repository to delete user in the database
-	err = usecase.UserRepository.DeleteUser(id)
+	err := usecase.UserRepository.DeleteUser(id)
 	if err != nil {
 		return err
 	}
