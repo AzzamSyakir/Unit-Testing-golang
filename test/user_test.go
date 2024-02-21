@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"testing-golang/cache"
 	"testing-golang/config"
 	"testing-golang/internal/delivery/http/router"
 	"testing-golang/migrate"
@@ -33,6 +34,13 @@ func TestSetup(t *testing.T) {
 	if globalDB == nil {
 		t.Errorf("database null")
 	}
+	// Initialize Redis
+	cache.InitRedis()
+	defer func() {
+		if err := cache.RedisClient.Close(); err != nil {
+			log.Println("Error closing Redis:", err)
+		}
+	}()
 }
 func TestRegisterAPI(t *testing.T) {
 	// Buat server test
