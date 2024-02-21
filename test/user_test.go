@@ -21,18 +21,12 @@ var loginToken string
 var globalDB *sql.DB
 
 func TestSetup(t *testing.T) {
-	envpath := "../.env"
-	err := godotenv.Load(envpath)
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
+	envpath := "../.env" //intialize relative path
 	// Initialize Redis
 	cache.InitRedis(envpath)
-	defer func() {
-		if err := cache.RedisClient.Close(); err != nil {
-			log.Println("Error closing Redis:", err)
-		}
-	}()
+	if err := godotenv.Load(envpath); err != nil {
+		t.Fatalf("Error loading .env file: %v", err)
+	}
 	db, err := config.InitDBTest() // Menginisialisasi database test
 	if err != nil {
 		log.Fatal("Error connecting to database:", err)
@@ -148,4 +142,9 @@ func TestLoginApi(t *testing.T) {
 	if loginToken == "" {
 		t.Errorf("Token is empty")
 	}
+	defer func() {
+		if err := cache.RedisClient.Close(); err != nil {
+			log.Println("Error closing Redis:", err)
+		}
+	}()
 }
