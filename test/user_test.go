@@ -105,7 +105,7 @@ func TestLoginApi(t *testing.T) {
 		t.Error("404 page not found")
 		return // Hentikan tes jika status code 404
 	}
-	if response.StatusCode != http.StatusCreated {
+	if response.StatusCode != http.StatusOK {
 		var result map[string]interface{}
 		err := json.NewDecoder(response.Body).Decode(&result)
 		if err != nil {
